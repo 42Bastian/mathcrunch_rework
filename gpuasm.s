@@ -232,21 +232,18 @@ _draw_string_off:
 _update_animations:
 	movei	#_animations,r0		; r0 = &animations
 	moveq	#0,r6			; prevA = 0
-	load	(r0),r2			; r2 = animations
-	cmpq	#0,r2			; if (animations == NULL) goto done;
+	load	(r0),r14		; r14 = animations
+	cmpq	#0,r14			; if (animations == NULL) goto done;
 	movei	#done,r16
 	jump	EQ,(r16)
 	move	r0,r7			; r7 = &animations
 
-	move	r2,r14			; r14 = a = animations
-
 foreach_animation:
-	load	(r14+1),r0		; r0 = a->sprite
-	move	r0,r14			; r14 = a->sprite
+	load	(r14+1),r14		; r14 = a->sprite
 	load	(r14+5),r1		; r1 = tmpX = a->sprite->x
-	load	(r14+6),r0		; r0 = a->sprite->y
+	load	(r14+6),r3		; r3 = a->sprite->y
+
 	move	r2,r14			; r14 = a
-	move	r0,r3			; r3 = tmpY = a->sprite->y
 	load	(r14+3),r4		; r4 = a->endX
 	moveq	#1,r5			; r5 = done = 1
 	cmp	r4,r1			; if (tmpX >= a->endX) goto check_ltx;
@@ -262,8 +259,7 @@ foreach_animation:
 check_ltx:
 	cmp	r1,r4			; Originally: if (a->endX > tmpX)  goto done_adj_x_set
 	jr	EQ,done_adj_x_set	; Changed to: if (a->endX == tmpX) goto done_adj_x_set
-	move	r2,r14			; r14 = a
-
+	nop
 					; else { /* tmpX > a->endX */
 	load	(r14+2),r0		;   r0 = a->speedPerTick
 	moveq	#0,r5			;   r5 = done = 0
@@ -271,7 +267,6 @@ check_ltx:
 					; }
 
 done_adj_x_set:
-	move	r2,r14			; r14 = a
 
 done_adj_x:
 	load	(r14+4),r0		; r0 = a->endY
@@ -288,51 +283,39 @@ done_adj_x:
 check_lty:
 	jr	EQ,done_adj_y		; Originally: if (a->endY > tmpY)  goto done_adj_y
 	nop				; Changed to: if (a->endY == tmpY) goto done_adj_y
-
 					; else { /* tmpY > a->endY */
-	move	r2,r14			;   r14 = a
 	load	(r14+2),r0		;   r0 = a->speedPerTick
 	moveq	#0,r5			;   r5 = done = 0
 	sub	r0,r3			;   tmpY -= a->speedPerTick
 					; }
-
 done_adj_y:
-	cmpq	#0,r5	;tstsi	r5	; if (done == 0) goto not_done;
-	movei	#not_done,r16
-	jump	EQ,(r16)
+	cmpq	#0,r5			; if (done == 0) goto not_done;
+	jr	eq,not_done
 	cmpq	#0,r6			; if (prevA == NULL) goto no_prev
 	jr	EQ,no_prev
-	nop
-					; else {
 	load	(r2),r8			;   r8 = a->next
-	jr	T,clear_next_sprite	;   prevA->next = a->next
+					; else {
+	jr	clear_next_sprite	;   prevA->next = a->next
 	store	r8,(r6)			;   goto clear_next_sprite;
 					; }
-
 no_prev:
-	load	(r2),r8			; r8 = a->next
 	store	r8,(r7)			; animations = a->next
 clear_next_sprite:
 	move	r2,r14			; r14 = a
 	move	r8,r2			; a = a->next
 	moveq	#0,r8			; r8 = 0
 	store	r8,(r14)		; a->next = NULL
-	movei	#try_next,r16		; a->sprite = NULL
-	jump	T,(r16)			; goto try_next;
+	jr	try_next		; goto try_next;
 	store	r8,(r14+1)
 
 not_done:
-	move	r2,r14			; r14 = a
-	load	(r14+1),r0		; r0 = a->sprite
-	move	r0,r14			; r14 = a->sprite
+	move	r2,r14
+	load	(r14+1),r14		; r14 = a->sprite
 	store	r1,(r14+5)		; a->sprite->x = tmpX
-	move	r2,r14			; r14 = a
-	load	(r14+1),r1		; r1 = a->sprite
 	move	r3,r0			; r0 = tmpY
-	move	r1,r14			; r14 = a->sprite
 	shlq	#4,r0
+	move	r2,r6			; prevA = a
 	store	r0,(r14+6)		; a->sprite->y = tmpY >> 4
-	move	r2, r6			; prevA = a
 	load	(r2),r2
 
 try_next:
