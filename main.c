@@ -84,7 +84,7 @@ static void blitToGpu(void *dst, void *src, unsigned long size)
     *A1_PIXEL = 0;
     *A2_PIXEL = 0;
 
-    *B_COUNT = ((size + 3) >> 2) | (0x1 << 16);
+    *(volatile long *)B_COUNT = ((size + 3) >> 2) | (0x1UL << 16);
 
     *B_CMD = SRCEN|UPDA1|UPDA2|LFU_REPLACE;
 
@@ -119,11 +119,11 @@ void doSplash(const unsigned char *splashbmp) {
     /* NOTE: Assumes BMP_WIDTH is phrase-aligned */
     *(volatile long *)A1_FLAGS = XADDPHR|WID320|PITCH1|PIXEL16;
     *(volatile long *)A1_PIXEL = 0;
-    *(volatile long *)A1_STEP = (1 << 16) | (-BMP_WIDTH & 0xffff);
+    *(volatile long *)A1_STEP = (1UL << 16) | (-BMP_WIDTH & 0xffff);
     *(volatile long *)A2_BASE = (unsigned long)splashbmp;
     *(volatile long *)A2_FLAGS = XADDPHR|WID320|PITCH1|PIXEL16;
     *(volatile long *)A2_PIXEL = 0;
-    *(volatile long *)A2_STEP = (1 << 16) | (-BMP_WIDTH & 0xffff);
+    *(volatile long *)A2_STEP = (1UL << 16) | (-BMP_WIDTH & 0xffff);
 
     *(volatile long *)B_COUNT = (BMP_HEIGHT << 16) | BMP_WIDTH;
     *(volatile long *)B_CMD = SRCEN|UPDA1|UPDA2|LFU_REPLACE;
