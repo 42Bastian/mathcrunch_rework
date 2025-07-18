@@ -102,14 +102,14 @@ void printStats(void)
 
 void intToStr(char *str, unsigned long int val)
 {
-    sprintf(str, "%u", val);
+  sprintf(str, "%lu", val);
 }
 
 void doSplash(const unsigned char *splashbmp) {
     unsigned long oldTicks;
 
     /* Idle the blitter */
-    while ((*(volatile long *)B_CMD & 1) == 0);
+    while ((*(volatile long *)B_CMD & 1UL) == 0);
 
     /* Wait until vblank */
     oldTicks = ticks;
@@ -125,7 +125,7 @@ void doSplash(const unsigned char *splashbmp) {
     *(volatile long *)A2_PIXEL = 0;
     *(volatile long *)A2_STEP = (1UL << 16) | (-BMP_WIDTH & 0xffff);
 
-    *(volatile long *)B_COUNT = (BMP_HEIGHT << 16) | BMP_WIDTH;
+    *(volatile long *)B_COUNT = ((long)BMP_HEIGHT << 16) | BMP_WIDTH;
     *(volatile long *)B_CMD = SRCEN|UPDA1|UPDA2|LFU_REPLACE;
 
     /* Set oldTicks to 5 seconds from when this function was entered */
@@ -170,8 +170,8 @@ int start()
     printf("Done blitting GPU code\n");
 
     while (++level_num < 9) {
-        sprintf(levelnum_str, "%u", level_num);
-        sprintf(levelname_str, "Multiples of %u", level_num + 1);
+        sprintf(levelnum_str, "%lu", level_num);
+        sprintf(levelname_str, "Multiples of %lu", level_num + 1);
         if (level_num == 1) {
             score = 0;
             musicAddr = ChangeMusic(mus_title);
