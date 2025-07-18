@@ -361,37 +361,28 @@ done:
 ;   - r13: The randomly-chosen value from the array
 ;
 ;   Clobbers:
-;   - r12
-;   - XXX r11, r10 - for the arbitrary delay loop.
+;   - r11, r10
 ;
 ; If adding usage of additional registers, ensure all callers (namely
 ; _pick_numbers) are updated accordingly.
 get_rand_entry:
-	movei	#U235SE_rng, r13
-	load	(r13), r12
-	movei	#$fc, r13
-	and	r13, r12
-	load	(r14+r12), r13
+	movei	#rnd,r13
+	load	(r13),r11
 
-	; XXX throw in some arbitrary delay to get better random numbers
-	; out of the DSP:
-	moveq	#31, r11
-.big:
-	moveq	#31, r10
-.little:
-	or	r12, r12
-	movei	#_square_data, TMP
-	load	(TMP), r12
-	subq	#1, r10
-	jr	NE, .little
-	nop
-	subq	#1, r11
-	jr	NE, .big
-	nop
-
+	move	r11,r10
+	rorq	#7,r10
+	xor	r11,r10
+	move	r10,r11
+	shlq	#9,r10
+	xor	r10,r11
 	load	(ST),TMP		; RTS
-	jump	T,(TMP)
+	store	r11,(r13)
+	shlq	#24,r11
 	addqt	#4,ST
+	shrq	#22,r11
+	jump	(TMP)
+	load	(r14+r11),r13
+
 
 ; Generate the numbers that will populate the game grid. This is a more or less
 ; completely hand-coded implementation of this C code:
@@ -430,6 +421,9 @@ get_rand_entry:
 ; modified, this function likely needs to be modified as well. Additionally, if
 ; this function is modified to call any other functions, it needs to be sure to
 ; preserve the local registers it uses when making such calls.
+
+FOR_Y4_0	.REGEQU	r12
+FOR_X5_0	.REGEQU r10
 _pick_numbers:
 	move	r0,r14			; r14 = val_array
 					; r1 = multiple_of
@@ -438,7 +432,7 @@ _pick_numbers:
 	movei	#_square_data,r15	; r15 = &square_data[0][0]
 	moveq	#0,r0			; num_multiples_remaining = 0
 	moveq	#5,r4			; y = 5
-
+	move	pc,FOR_Y4_0
 .for_y4_0:
 	moveq	#6,r3			; x = 6
 
@@ -457,17 +451,14 @@ _pick_numbers:
 	load	(r5),r7
 
 	cmpq	#0,r7			; if ((remainder == 0) || (remainder == -multiple_of))
+	moveq	#1, r2			; is_multiple = 1;
 	jr	EQ,.is_multiple
 	add	r1,r7
 	jr	EQ,.is_multiple
 	nop
-	jr	.not_multiple
 	moveq	#0, r2			; is_multiple = 0
 
 .is_multiple:
-	moveq	#1, r2			; is_multiple = 1;
-
-.not_multiple:
 	movei	#.for_x5_0, TMP
 	store	r2, (r15+1)		; square_data[5-y][6-x].is_multiple = is_multiple
 	add	r2, r0			; num_multiples_remaining += is_multiple
@@ -477,16 +468,17 @@ _pick_numbers:
 	jump	NE,(TMP)		; if (x != 0) goto .for_x5_0
 	addqt	#12, r15		; r15 = next(square_data)
 
-	movei	#.for_y4_0, TMP
 	subq	#1,r4
-	jump	NE,(TMP)
-	nop
+	jump	NE,(FOR_Y4_0)
+//->	nop
 
 	load	(ST),TMP		; RTS
 	jump	T,(TMP)
 	addqt	#4,ST
 
 		.long
+
+rnd:	.dc.l $3543532
 
 		.68000
 _gpuasm_end:

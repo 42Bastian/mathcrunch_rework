@@ -1,3 +1,4 @@
+#-*-make-*-
 # Copyright 2025 James Jones
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -91,3 +92,8 @@ evil_minded.mod:
 dog16.mod:
 	wget https://api.modarchive.org/downloads.php?moduleid=189202#songerson_-_dog16.mod
 	mv 'downloads.php?moduleid=189202' $@
+
+.PHONY: bpe
+
+bpe: $(PROGS)
+	~/bpe/bigpemu $< -devmode &
