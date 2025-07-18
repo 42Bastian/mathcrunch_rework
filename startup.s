@@ -148,7 +148,7 @@ LISTSIZE    	.equ    3 + (MAX_SPRITES * 2)	; List length (in phrases):
 		move.w  #$FFFF,VI       	; disable video interrupts
 
 		move.l  #INITSTACK,a7   	; Setup a stack
-			
+
 		jsr 	InitVideo      		; Setup our video registers.
 		jsr 	InitLister     		; Initialize Object Display List
 		jsr 	InitInt      		; Initialize our VBLANK routine
@@ -226,15 +226,15 @@ InitInt:
 
 		move.l  (sp)+,d0
 		rts
-		
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Procedure: InitVideo (same as in vidinit.s)
 ;            Build values for hdb, hde, vdb, and vde and store them.
 ;
-						
+
 InitVideo:
 		movem.l d0-d6,-(sp)
-			
+
 		move.w  CONFIG,d0      		 ; Also is joystick register
 		andi.w  #VIDTYPE,d0    		 ; 0 = PAL, 1 = NTSC
 		beq 	palvals
@@ -265,7 +265,7 @@ calc_vals:
 
 		sub.w   #1,d1         	  	; Width/2 - 1
 		ori.w   #$400,d1      	  	; (Width/2 - 1)|$400
-		
+
 		move.w  d1,a_hde
 		move.w  d1,HDE
 
@@ -282,10 +282,10 @@ calc_vals:
 
 		move.w  a_vdb,VDB
 		move.w  #$FFFF,VDE
-			
+
 		move.l  #0,BORD1        	; Black border
 		move.w  #0,BG           	; Init line buffer to black
-			
+
 		movem.l (sp)+,d0-d6
 		rts
 
@@ -387,12 +387,12 @@ PlaySound:
 ;             d2.l/d3.l - Link address overlays
 ;             d4.l      - Work register
 ;             a0.l      - Roving object list pointer
-		
+
 InitLister:
 		movem.l d1-d4/a0,-(sp)		; Save registers
 
 		move.l	#0, spriteList		; Turn off the sprite list
-			
+
 		lea     listbuf,a0
 		move.l  a0,d2           	; Copy
 
@@ -401,7 +401,7 @@ InitLister:
 
 		lsr.l	#8,d2			; Shift high half into place
 		lsr.l	#3,d2
-		
+
 		swap	d3			; Place low half correctly
 		clr.w	d3
 		lsl.l	#5,d3
@@ -412,7 +412,7 @@ InitLister:
 		move.l  #(BRANCHOBJ|O_BRLT),d1  ; $4000 = VC < YPOS
 		or.l	d2,d0			; Do LINK overlay
 		or.l	d3,d1
-								
+
 		move.w  a_vde,d4                ; for YPOS
 		lsl.w   #3,d4                   ; Make it bits 13-3
 		or.w    d4,d1
@@ -662,7 +662,7 @@ _lose_str:	.dc.b	'That number is not a multiple! Game Over.',0
 _press_c_str:	.dc.b	'          Press "C" to continue',0
 
 		.long
-_m2_vals:	.dc.l	 2, 4, 6, 8,10,12,14,16,18,20, 1, 3, 5, 7, 9,11
+_m2_vals:	.dc.l	 3, 4, 6, 8,10,12,14,16,18,20, 1, 3, 5, 7, 9,11
 		.dc.l	13,15,17,19, 2, 4, 6, 8,10,12,14,16,18,20, 1, 3
 		.dc.l	 5, 7, 9,11,13,15,17,19, 2, 4, 6, 8,10,12,14,16
 		.dc.l	18,20, 1, 3, 5, 7, 9,11,13,15,17,19, 2, 4, 1, 3
