@@ -234,8 +234,8 @@ _update_animations:
 	moveq	#0,r6			; prevA = 0
 	load	(r0),r2			; r2 = animations
 	cmpq	#0,r2			; if (animations == NULL) goto done;
-	movei	#done,r16
-	jump	EQ,(r16)
+	movei	#done,TMP
+	jump	EQ,(TMP)
 	move	r0,r7			; r7 = &animations
 
 	move	r2,r14			; r14 = a = animations
@@ -271,7 +271,7 @@ check_ltx:
 					; }
 
 done_adj_x_set:
-	move	r2,r14			; r14 = a
+
 
 done_adj_x:
 	load	(r14+4),r0		; r0 = a->endY
@@ -281,39 +281,32 @@ done_adj_x:
 
 					; else { /* tmpY < a->endY */
 	load	(r14+2),r0		;   r0 = a->speedPerTick
-	movei	#not_done,r16		;   tmpY += a->speedPerTick
-	jump	T,(r16)			;   goto not_done
+	movei	#not_done,TMP		;   tmpY += a->speedPerTick
+	jump	T,(TMP)			;   goto not_done
 	add	r0,r3			; }
 
 check_lty:
 	jr	EQ,done_adj_y		; Originally: if (a->endY > tmpY)  goto done_adj_y
-	nop				; Changed to: if (a->endY == tmpY) goto done_adj_y
+					; Changed to: if (a->endY == tmpY) goto done_adj_y
+	cmpq	#0,r5	;tstsi	r5	; if (done == 0) goto not_done;
 
 					; else { /* tmpY > a->endY */
-	move	r2,r14			;   r14 = a
 	load	(r14+2),r0		;   r0 = a->speedPerTick
-	moveq	#0,r5			;   r5 = done = 0
 	sub	r0,r3			;   tmpY -= a->speedPerTick
+	xor	r5,r5			;   r5 = done = 0 (set flags)
 					; }
-
 done_adj_y:
-	cmpq	#0,r5	;tstsi	r5	; if (done == 0) goto not_done;
-	movei	#not_done,r16
-	jump	EQ,(r16)
+	jr	eq,not_done
 	cmpq	#0,r6			; if (prevA == NULL) goto no_prev
 	jr	EQ,no_prev
-	nop
-					; else {
 	load	(r2),r8			;   r8 = a->next
+					; else {
 	jr	T,clear_next_sprite	;   prevA->next = a->next
 	store	r8,(r6)			;   goto clear_next_sprite;
 					; }
-
 no_prev:
-	load	(r2),r8			; r8 = a->next
 	store	r8,(r7)			; animations = a->next
 clear_next_sprite:
-	move	r2,r14			; r14 = a
 	move	r8,r2			; a = a->next
 	moveq	#0,r8			; r8 = 0
 	store	r8,(r14)		; a->next = NULL
@@ -331,8 +324,8 @@ not_done:
 
 try_next:
 	cmpq	#0,r2			; if (a = a->next) goto foreach_animation;
-	movei	#foreach_animation,r16
-	jump	NE,(r16)
+	movei	#foreach_animation,TMP
+	jump	NE,(TMP)
 	move	r2,r14			; r14 = a
 
 done:
