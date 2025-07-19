@@ -75,20 +75,21 @@ _draw_string_off:
 
 		store	r0, (r15)			; Store A1_BASE (destination addr)
 		store	r4, (r15+(B_PATD-A1_BASE)/4)			; Store white in B_PATD low dword
-		store	zeror, (r15+(A1_CLIP-A1_BASE)/4); Store 0 in A1_CLIP (No clipping)
-		store	r4, (r15+(B_PATD-A1_BASE+4)/4)			; Store white in B_PATD high dword
+;;; Setting high word not needed
+//->		store	r4, (r15+(B_PATD-A1_BASE+4)/4)	; Store white in B_PATD high dword
 
-		movei	#XADDPIX|YADD0, r12
 		load	(r14+9), r4			; Get sprite blitter flags in r4
-		or	r12, r4
+		bset	#16,r4				; XADDPIX|YADD0 (YADD0 == 0)
 
 		; Add (-CHR_WIDTH, 1) to dst x, y pointers after each inner loop iter
 		movei	#(1<<16)|((-CHR_WIDTH)&$ffff), r8
-
 		store	r4, (r15+(A1_FLAGS-A1_BASE)/4)	  ; Store A1_FLAGS
-		store	zeror, (r15+(A1_PIXEL-A1_BASE)/4) ; Store 0 in A1_FPIXEL
 		store	r8, (r15+(A1_STEP-A1_BASE)/4)			; Store (-CHR_WIDTH, 1) in A1_STEP
-		store	zeror, (r15+(A1_FSTEP-A1_BASE)/4)			; Store 0 in A1_FSTEP
+
+;;; clipping and FPIXEL/FSTEP not used, no need to clear
+;;->		store	zeror, (r15+(A1_FPIXEL-A1_BASE)/4) ; Store 0 in A1_FPIXEL
+;;->		store	zeror, (r15+(A1_FSTEP-A1_BASE)/4)			; Store 0 in A1_FSTEP
+;;->		store	zeror, (r15+(A1_CLIP-A1_BASE)/4); Store 0 in A1_CLIP (No clipping)
 
 		movei	#fontdata, r4
 
@@ -125,16 +126,17 @@ _draw_string_off:
 		;  -BCOMPEN uses bitmask to decide which pixels to actually write
 		movei	#SRCENX|DSTEN|UPDA1|UPDA2|PATDSEL|BCOMPEN, r5;
 
-		movei	#FNTFIRSTCHR, r8	; Load first char idx of font in r8
+//->		movei	#FNTFIRSTCHR, r8	; Load first char idx of font in r8
 		movei	#FNTLASTCHR, r9		; Load last char idx of font in r9
 
 		jr	.nextchr		; Jump into loop
 		xor	r11, r11		; clear r11
 
-.blitloop:	store	r7, (r15+(A2_PIXEL-A1_BASE)/4)			; Store src pixel loc in A2_PIXEL
-		store	r1, (r15+(A1_PIXEL-A1_BASE)/4)			; Store dst pixel loc in A1_PIXEL
-		store	r3, (r15+(B_COUNT-A1_BASE)/4)			; Write loop dimensions to B_COUNT
-		store	r5, (r15+(B_CMD-A1_BASE)/4)			; Write op to B_CMD
+.blitloop:
+		store	r7, (r15+(A2_PIXEL-A1_BASE)/4)	; Store src pixel loc in A2_PIXEL
+		store	r1, (r15+(A1_PIXEL-A1_BASE)/4)	; Store dst pixel loc in A1_PIXEL
+		store	r3, (r15+(B_COUNT-A1_BASE)/4)	; Write loop dimensions to B_COUNT
+		store	r5, (r15+(B_CMD-A1_BASE)/4)	; Write op to B_CMD
 
 .nextchr:
 		loadb	(r2), r7		; Load next character
@@ -144,7 +146,7 @@ _draw_string_off:
 		cmp	r9, r7			; Compare to last char
 		addqt	#1, r2			; Always advance string pointer
 		jr	HI, .nextchr		; If chr out of range, leave blank space
-		sub	r8, r7			; Subtract font first chr from character
+		subq	#FNTFIRSTCHR, r7	; Subtract font first chr from character
 		jr	MI, .nextchr		; If chr out of range, leave blank space
 //->		nop
 .waitblit:	btst	#0, r11			; See if bit 0 is set
