@@ -216,14 +216,12 @@ _draw_string_off:
 ; -XXX TODO: Clamp to end[X,Y]
 
 _update_animations:
-	movei	#_animations,r0		; r0 = &animations
-	moveq	#0,r6			; prevA = 0
-	load	(r0),r14		; r14 = animations
+	movei	#_animations,r7		; r7 = &animations
+	load	(r7),r14		; r14 = animations
 	cmpq	#0,r14			; if (animations == NULL) goto done;
 	movei	#done,TMP
 	jump	EQ,(TMP)
-	move	r0,r7			; r7 = &animations
-
+	moveq	#0,r6			; prevA = 0
 
 foreach_animation:
 	load	(r14+1),r15		; r15 = a->sprite
