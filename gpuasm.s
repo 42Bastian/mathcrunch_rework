@@ -250,23 +250,22 @@ foreach_animation:
 	load	(r14+3),r4		; r4 = a->endX
 	moveq	#1,r5			; r5 = done = 1
 	cmp	r4,r1			; if (tmpX >= a->endX) goto check_ltx;
+	load	(r14+2),r9		;   r9 = a->speedPerTick
 	jr	CC,check_ltx
 	shrq	#4,r3			; r3 = tmpY = a->sprite->y >> 4;
 
 					; else { /* tmpX < a->endX */
-	load	(r14+2),r0		;   r0 = a->speedPerTick
 	moveq	#0,r5			;   r5 = done = 0
 	jr	T, done_adj_x		;   tmpX += a->speedPerTick
-	add	r0,r1			; }
+	add	r9,r1			; }
 
 check_ltx:
 	cmp	r1,r4			; Originally: if (a->endX > tmpX)  goto done_adj_x_set
 	jr	EQ,done_adj_x_set	; Changed to: if (a->endX == tmpX) goto done_adj_x_set
 	nop
 					; else { /* tmpX > a->endX */
-	load	(r14+2),r0		;   r0 = a->speedPerTick
 	moveq	#0,r5			;   r5 = done = 0
-	sub	r0,r1			;   tmpX -= a->speedPerTick
+	sub	r9,r1			;   tmpX -= a->speedPerTick
 					; }
 done_adj_x_set:
 
@@ -276,10 +275,9 @@ done_adj_x:
 	jr	CC,check_lty
 	nop
 					; else { /* tmpY < a->endY */
-	load	(r14+2),r0		;   r0 = a->speedPerTick
 	movei	#not_done,TMP		;   tmpY += a->speedPerTick
 	jump	T,(TMP)			;   goto not_done
-	add	r0,r3			; }
+	add	r9,r3			; }
 
 check_lty:
 	jr	EQ,done_adj_y		; Originally: if (a->endY > tmpY)  goto done_adj_y
@@ -287,8 +285,7 @@ check_lty:
 	cmpq	#0,r5			; if (done == 0) goto not_done;
 
 					; else { /* tmpY > a->endY */
-	load	(r14+2),r0		;   r0 = a->speedPerTick
-	sub	r0,r3			;   tmpY -= a->speedPerTick
+	sub	r9,r3			;   tmpY -= a->speedPerTick
 	xor	r5,r5			;   r5 = done = 0 (set flags)
 					; }
 done_adj_y:
