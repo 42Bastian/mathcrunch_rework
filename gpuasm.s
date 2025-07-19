@@ -232,20 +232,17 @@ _draw_string_off:
 _update_animations:
 	movei	#_animations,r0		; r0 = &animations
 	moveq	#0,r6			; prevA = 0
-	load	(r0),r2			; r2 = animations
-	cmpq	#0,r2			; if (animations == NULL) goto done;
+	load	(r0),r14		; r14 = animations
+	cmpq	#0,r14			; if (animations == NULL) goto done;
 	movei	#done,TMP
 	jump	EQ,(TMP)
 	move	r0,r7			; r7 = &animations
 
-	move	r2,r14			; r14 = a = animations
 
 foreach_animation:
-	load	(r14+1),r14		; r14 = a->sprite
-	load	(r14+5),r1		; r1 = tmpX = a->sprite->x
-	load	(r14+6),r3		; r3 = tmpY = a->sprite->y
-
-	move	r2,r14			; r14 = a
+	load	(r14+1),r15		; r15 = a->sprite
+	load	(r15+5),r1		; r1 = tmpX = a->sprite->x
+	load	(r15+6),r3		; r3 = tmpY = a->sprite->y
 
 	load	(r14+3),r4		; r4 = a->endX
 	moveq	#1,r5			; r5 = done = 1
@@ -292,33 +289,33 @@ done_adj_y:
 	jr	eq,not_done		; (done == 0 ?) => goto
 	cmpq	#0,r6			; if (prevA == NULL) goto no_prev
 	jr	EQ,no_prev
-	load	(r2),r8			;   r8 = a->next
+	load	(r14),r8		;   r8 = a->next
 					; else {
-	jr	T,clear_next_sprite	;   prevA->next = a->next
+	jr	clear_next_sprite	;   prevA->next = a->next
 	store	r8,(r6)			;   goto clear_next_sprite;
 					; }
 no_prev:
 	store	r8,(r7)			; animations = a->next
 clear_next_sprite:
-	move	r8,r2			; a = a->next
-	moveq	#0,r8			; r8 = 0
-	store	r8,(r14)		; a->next = NULL
+	moveq	#0,r2			; r8 = 0
+	store	r2,(r14)		; a->next = NULL
+	store	r2,(r14+1)
 	jr	try_next
-	store	r8,(r14+1)
+	move	r8,r14			; a = a->next
 
 not_done:
-	load	(r14+1),r14
+	load	(r14+1),r15
 	shlq	#4,r3
-	store	r1,(r14+5)		; a->sprite->x = tmpX
-	store	r3,(r14+6)		; a->sprite->y = tmpY << 4
-	move	r2, r6			; prevA = a
-	load	(r2),r2
+	store	r1,(r15+5)		; a->sprite->x = tmpX
+	store	r3,(r15+6)		; a->sprite->y = tmpY << 4
+	move	r14, r6			; prevA = a
+	load	(r14),r14
 
 try_next:
-	cmpq	#0,r2			; if (a = a->next) goto foreach_animation;
+	cmpq	#0,r14			; if (a = a->next) goto foreach_animation;
 	movei	#foreach_animation,TMP
 	jump	NE,(TMP)
-	move	r2,r14			; r14 = a
+	nop
 
 done:
 	load	(ST),TMP		; RTS
