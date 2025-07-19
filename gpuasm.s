@@ -236,19 +236,18 @@ foreach_animation:
 	shrq	#4,r3			; r3 = tmpY = a->sprite->y >> 4;
 
 					; else { /* tmpX < a->endX */
-	moveq	#0,r5			;   r5 = done = 0
-	jr	T, done_adj_x		;   tmpX += a->speedPerTick
+	jr	done_adj_x_set		;   tmpX += a->speedPerTick
 	add	r9,r1			; }
 
 check_ltx:
 	cmp	r1,r4			; Originally: if (a->endX > tmpX)  goto done_adj_x_set
-	jr	EQ,done_adj_x_set	; Changed to: if (a->endX == tmpX) goto done_adj_x_set
+	jr	EQ,done_adj_x		; Changed to: if (a->endX == tmpX) goto done_adj_x_set
 	nop
 					; else { /* tmpX > a->endX */
-	moveq	#0,r5			;   r5 = done = 0
 	sub	r9,r1			;   tmpX -= a->speedPerTick
 					; }
 done_adj_x_set:
+	moveq	#0,r5			;   r5 = done = 0
 
 done_adj_x:
 	load	(r14+4),r0		; r0 = a->endY
