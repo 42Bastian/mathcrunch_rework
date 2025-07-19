@@ -351,10 +351,8 @@ get_rand_entry:
 	move	r10,r11
 	shlq	#9,r10
 	xor	r10,r11
-	load	(ST),TMP		; RTS
 	store	r11,(r13)
 	shlq	#24,r11
-	addqt	#4,ST
 	shrq	#22,r11
 	jump	(TMP)
 	load	(r14+r11),r13
@@ -414,10 +412,9 @@ _pick_numbers:
 
 .for_x5_0:
 	move	PC,TMP
-	subqt	#4,ST
-	addqt	#10,TMP
-	jump	T,(r6)
-	store	TMP,(ST)		; call r13 = get_rand_entry(val_array)
+	jump	(r6)			; call r13 = get_rand_entry(val_array)
+	addqt	#6,TMP
+
 	store	r13, (r15)		; square_data[5-y][6-x].val = r13
 
 	div	r1,r13
