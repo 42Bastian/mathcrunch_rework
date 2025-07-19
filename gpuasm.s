@@ -397,7 +397,7 @@ get_rand_entry:
 ; preserve the local registers it uses when making such calls.
 
 FOR_Y4_0	.REGEQU	r12
-FOR_X5_0	.REGEQU r10
+
 _pick_numbers:
 	move	r0,r14			; r14 = val_array
 					; r1 = multiple_of
@@ -418,13 +418,16 @@ _pick_numbers:
 	store	r13, (r15)		; square_data[5-y][6-x].val = r13
 
 	div	r1,r13
+
+	moveq	#1,r2			; is_multiple = 1;
+	store	r2,(r15+2)		; square_data[5-y][6-x].is_visible = 1
+
 	; Stall progress until the divide is complete. This is needed to ensure
 	; G_REMAIN has been updated based on the latest div result.
 	or	r13,r13
 	load	(r5),r7
 
 	cmpq	#0,r7			; if ((remainder == 0) || (remainder == -multiple_of))
-	moveq	#1, r2			; is_multiple = 1;
 	jr	EQ,.is_multiple
 	add	r1,r7
 	jr	EQ,.is_multiple
@@ -434,16 +437,15 @@ _pick_numbers:
 .is_multiple:
 	movei	#.for_x5_0, TMP
 	store	r2, (r15+1)		; square_data[5-y][6-x].is_multiple = is_multiple
-	add	r2, r0			; num_multiples_remaining += is_multiple
+
 	subq	#1,r3			; x -= 1
-	moveq	#1,r2
-	store	r2,(r15+2)		; square_data[5-y][6-x].is_visible = 1
-	jump	NE,(TMP)		; if (x != 0) goto .for_x5_0
 	addqt	#12, r15		; r15 = next(square_data)
+	jump	NE,(TMP)		; if (x != 0) goto .for_x5_0
+	add	r2, r0			; num_multiples_remaining += is_multiple
 
 	subq	#1,r4
 	jump	NE,(FOR_Y4_0)
-//->	nop
+	nop
 
 	load	(ST),TMP		; RTS
 	jump	T,(TMP)
