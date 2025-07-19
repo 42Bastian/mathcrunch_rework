@@ -76,7 +76,7 @@ _draw_string_off:
 		store	r0, (r15)			; Store A1_BASE (destination addr)
 		store	r4, (r15+(B_PATD-A1_BASE)/4)			; Store white in B_PATD low dword
 		store	zeror, (r15+(A1_CLIP-A1_BASE)/4); Store 0 in A1_CLIP (No clipping)
-		store	r4, (+(B_PATD-A1_BASE+4)/4)			; Store white in B_PATD high dword
+		store	r4, (r15+(B_PATD-A1_BASE+4)/4)			; Store white in B_PATD high dword
 
 		movei	#XADDPIX|YADD0, r12
 		load	(r14+9), r4			; Get sprite blitter flags in r4
