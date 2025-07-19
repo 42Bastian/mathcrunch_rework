@@ -146,7 +146,7 @@ _draw_string_off:
 		jr	HI, .nextchr		; If chr out of range, leave blank space
 		sub	r8, r7			; Subtract font first chr from character
 		jr	MI, .nextchr		; If chr out of range, leave blank space
-		nop
+//->		nop
 .waitblit:	btst	#0, r11			; See if bit 0 is set
 		jr	NE, .blitloop		; If done, next iteration
 		xor	r11, r11		; Clear r11 for next iteration
@@ -344,6 +344,9 @@ get_rand_entry:
 	load	(r14+r11),r13
 
 
+;;; This is the origina comment, the new assembly routine leverages the fact,
+;;; that the elements are linear in the memory.
+;;;
 ; Generate the numbers that will populate the game grid. This is a more or less
 ; completely hand-coded implementation of this C code:
 ;
@@ -382,7 +385,7 @@ get_rand_entry:
 ; this function is modified to call any other functions, it needs to be sure to
 ; preserve the local registers it uses when making such calls.
 
-FOR_Y4_0	.REGEQU	r12
+FOR_XY	.REGEQU	r12
 
 _pick_numbers:
 	move	r0,r14			; r14 = val_array
@@ -391,12 +394,10 @@ _pick_numbers:
 	movei	#get_rand_entry,r6	; r6 = &get_rand_entry
 	movei	#_square_data,r15	; r15 = &square_data[0][0]
 	moveq	#0,r0			; num_multiples_remaining = 0
-	moveq	#5,r4			; y = 5
-	move	pc,FOR_Y4_0
-.for_y4_0:
-	moveq	#6,r3			; x = 6
 
-.for_x5_0:
+	moveq	#6*5,r3			; x*y = 6*5 (one loop for x and y)
+	move	pc,FOR_XY
+.for_xy:
 	move	PC,TMP
 	jump	(r6)			; call r13 = get_rand_entry(val_array)
 	addqt	#6,TMP
@@ -421,17 +422,12 @@ _pick_numbers:
 	moveq	#0, r2			; is_multiple = 0
 
 .is_multiple:
-	movei	#.for_x5_0, TMP
 	store	r2, (r15+1)		; square_data[5-y][6-x].is_multiple = is_multiple
 
 	subq	#1,r3			; x -= 1
 	addqt	#12, r15		; r15 = next(square_data)
-	jump	NE,(TMP)		; if (x != 0) goto .for_x5_0
+	jump	NE,(FOR_XY)		; if (x != 0) goto .for_x5_0
 	add	r2, r0			; num_multiples_remaining += is_multiple
-
-	subq	#1,r4
-	jump	NE,(FOR_Y4_0)
-	nop
 
 	load	(ST),TMP		; RTS
 	jump	T,(TMP)
