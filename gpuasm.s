@@ -241,12 +241,12 @@ _update_animations:
 	move	r2,r14			; r14 = a = animations
 
 foreach_animation:
-	load	(r14+1),r0		; r0 = a->sprite
-	move	r0,r14			; r14 = a->sprite
+	load	(r14+1),r14		; r14 = a->sprite
 	load	(r14+5),r1		; r1 = tmpX = a->sprite->x
-	load	(r14+6),r0		; r0 = a->sprite->y
+	load	(r14+6),r3		; r3 = tmpY = a->sprite->y
+
 	move	r2,r14			; r14 = a
-	move	r0,r3			; r3 = tmpY = a->sprite->y
+
 	load	(r14+3),r4		; r4 = a->endX
 	moveq	#1,r5			; r5 = done = 1
 	cmp	r4,r1			; if (tmpX >= a->endX) goto check_ltx;
@@ -262,23 +262,19 @@ foreach_animation:
 check_ltx:
 	cmp	r1,r4			; Originally: if (a->endX > tmpX)  goto done_adj_x_set
 	jr	EQ,done_adj_x_set	; Changed to: if (a->endX == tmpX) goto done_adj_x_set
-	move	r2,r14			; r14 = a
-
+	nop
 					; else { /* tmpX > a->endX */
 	load	(r14+2),r0		;   r0 = a->speedPerTick
 	moveq	#0,r5			;   r5 = done = 0
 	sub	r0,r1			;   tmpX -= a->speedPerTick
 					; }
-
 done_adj_x_set:
-
 
 done_adj_x:
 	load	(r14+4),r0		; r0 = a->endY
 	cmp	r0,r3			; if (tmpY >= a->endY) goto check_lty;
 	jr	CC,check_lty
-	cmp	r3,r0
-
+	nop
 					; else { /* tmpY < a->endY */
 	load	(r14+2),r0		;   r0 = a->speedPerTick
 	movei	#not_done,TMP		;   tmpY += a->speedPerTick
@@ -288,7 +284,7 @@ done_adj_x:
 check_lty:
 	jr	EQ,done_adj_y		; Originally: if (a->endY > tmpY)  goto done_adj_y
 					; Changed to: if (a->endY == tmpY) goto done_adj_y
-	cmpq	#0,r5	;tstsi	r5	; if (done == 0) goto not_done;
+	cmpq	#0,r5			; if (done == 0) goto not_done;
 
 					; else { /* tmpY > a->endY */
 	load	(r14+2),r0		;   r0 = a->speedPerTick
@@ -296,7 +292,7 @@ check_lty:
 	xor	r5,r5			;   r5 = done = 0 (set flags)
 					; }
 done_adj_y:
-	jr	eq,not_done
+	jr	eq,not_done		; (done == 0 ?) => goto
 	cmpq	#0,r6			; if (prevA == NULL) goto no_prev
 	jr	EQ,no_prev
 	load	(r2),r8			;   r8 = a->next
@@ -315,10 +311,9 @@ clear_next_sprite:
 
 not_done:
 	load	(r14+1),r14
+	shlq	#4,r3
 	store	r1,(r14+5)		; a->sprite->x = tmpX
-	move	r3,r0			; r0 = tmpY
-	shlq	#4,r0
-	store	r0,(r14+6)		; a->sprite->y = tmpY >> 4
+	store	r3,(r14+6)		; a->sprite->y = tmpY << 4
 	move	r2, r6			; prevA = a
 	load	(r2),r2
 
