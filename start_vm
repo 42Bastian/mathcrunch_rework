@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+podman run -it --cap-add=SYS_ADMIN --security-opt label=disable \
+  -v /Users/bastian/jaguar/mathcrunch_rework:/mp \
+  cubanismo/jaguar-sdk:0.3

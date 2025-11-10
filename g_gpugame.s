@@ -11,6 +11,7 @@ ST	.REGEQU	r31
 TMP	.REGEQU	r16
 GT	.CCDEF	$15
 gcc2_compiled_for_madmac:
+_gpugame_loc::
 	;(.TEXT)
 	.EVEN
 _gpu_start::
